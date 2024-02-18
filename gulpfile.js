@@ -3,6 +3,8 @@ let preprocessor = 'sass';
  
 // Определяем константы Gulp
 const { src, dest, parallel, series, watch } = require('gulp');
+
+const pug = require('gulp-pug');
  
 // Подключаем Browsersync
 const browserSync = require('browser-sync').create();
@@ -37,7 +39,16 @@ function browsersync() {
 		online: true // Режим работы: true или false
 	})
 }
- 
+ function pugNew() {
+     return src('app/pug/*.pug')
+    .pipe(
+      pug({
+         pretty: true 
+      })
+    )
+    .pipe(dest('app/'))
+    .pipe(browserSync.stream());
+ }
 function scripts() {
 	return src([ // Берем файлы из источников
 		'node_modules/jquery/dist/jquery.min.js', // Пример подключения библиотеки
@@ -101,7 +112,9 @@ function startwatch() {
 	
 	// Мониторим файлы препроцессора на изменения
 	watch('app/**/' + preprocessor + '/**/*', styles);
- 
+
+    watch('app/pug/*.pug', pugNew);
+
 	// Мониторим файлы HTML на изменения
 	watch('app/**/*.html').on('change', browserSync.reload);
  
@@ -112,7 +125,9 @@ function startwatch() {
  
 // Экспортируем функцию browsersync() как таск browsersync. Значение после знака = это имеющаяся функция.
 exports.browsersync = browsersync;
- 
+
+exports.pugNew = pugNew; 
+
 // Экспортируем функцию scripts() в таск scripts
 exports.scripts = scripts;
  
@@ -129,4 +144,4 @@ exports.cleanimg = cleanimg;
 exports.build = series(cleandist, styles, scripts, images, buildcopy);
  
 // Экспортируем дефолтный таск с нужным набором функций
-exports.default = parallel(styles, scripts, images, browsersync, startwatch);
+exports.default = parallel(styles, pugNew ,scripts, images, browsersync, startwatch);
